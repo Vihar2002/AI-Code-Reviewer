@@ -17,43 +17,51 @@ Supports multiple programming languages
 Simple integration with any local Git repository
 
 Supported Languages
-
 .py, .js, .ts, .tsx, .java, .go, .rb, .cs
 
 Setup
-
-Clone the repository
-
+1. Clone the Repository
 git clone https://github.com/Vihar2002/AI-Code-Reviewer.git
 cd AI-Code-Reviewer
 
-
-Create a virtual environment
-
+2. Create a Virtual Environment
 python -m venv .venv
-.\.venv\Scripts\activate   # Windows
-source .venv/bin/activate  # Linux/Mac
 
 
-Install dependencies
+Activate it:
 
+Windows
+
+.\.venv\Scripts\activate
+
+
+Linux / macOS
+
+source .venv/bin/activate
+
+3. Install Dependencies
 pip install openai python-dotenv
 
+4. Add Your OpenAI API Key
 
-Add your OpenAI API key
 Create a .env file in the project root:
 
 OPENAI_API_KEY=your_api_key_here
 
+5. Set Up the Pre-Commit Hook
 
-Set up the pre-commit hook
-Create .git/hooks/pre-commit:
+Create .git/hooks/pre-commit and add:
 
 #!/usr/bin/env bash
 set -euo pipefail
 PY=".venv/Scripts/python.exe"
 echo "[pre-commit] running ai_code_reviewer.py"
 $PY tools/ai_code_reviewer.py
+
+
+Make it executable:
+
+git update-index --chmod=+x .git/hooks/pre-commit
 
 Usage
 
@@ -62,10 +70,9 @@ After setup, every time you commit changes:
 git commit -m "your commit message"
 
 
-The script analyzes the new code and prints a short AI review before allowing the commit.
+The script analyzes the modified code and prints an AI-generated review before allowing the commit.
 
-Example:
-
+Example Output
 [ai-review] Sending code changes for AI analysis...
 File: test.py
 --------------------------------------------------
@@ -86,8 +93,10 @@ AI-Code-Reviewer/
 
 Future Improvements
 
-Severity levels for feedback
+Add severity levels for feedback
 
-JSON output for CI/CD systems
+Enable JSON output for CI/CD pipelines
 
-Parallel analysis for large commits
+Support concurrent analysis for large commits
+
+This version is ready to copy directly into your GitHub repository as README.md. It will render perfectly with proper headings, indentation, and code blocks.
