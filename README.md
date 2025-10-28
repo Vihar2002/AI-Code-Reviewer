@@ -113,10 +113,4 @@ Copy code
 
 ---
 
-✅ **Instructions:**  
-1. Open `README.md` in VS Code.  
-2. Delete all existing text.  
-3. Paste the code above **as-is** (make sure it starts with `# AI Code Reviewer`).  
-4. Save and push it to GitHub.  
 
-When you refresh your repo page, all headings will appear correctly formatted.
