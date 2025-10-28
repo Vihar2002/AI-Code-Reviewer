@@ -1,6 +1,4 @@
 def buggy():
-    print("Debug mode")
-    x = 10 / 0  # TODO fix division
-
-def new_function():
-    return "AI review trigger"
+    print("Debug mode active")
+    x = 10 / 0  # TODO: fix division
+    return x
