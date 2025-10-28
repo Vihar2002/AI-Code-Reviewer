@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-"""
-Step 3 – AI-Assisted Code Reviewer
-Analyzes only staged diffs and uses OpenAI to generate inline review comments.
-"""
-
 import os
 import sys
 import subprocess
@@ -11,7 +6,6 @@ from pathlib import Path
 from openai import OpenAI
 from dotenv import load_dotenv
 
-# Load .env
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -40,7 +34,7 @@ def parse_diffs(diff_text):
             current_file = Path(line[6:].strip())
         elif line.startswith("@@") and current_file:
             try:
-                header = line.split(" ")[2]  # +13,2
+                header = line.split(" ")[2]
                 start_line = int(header.split(",")[0][1:])
                 line_no = start_line
             except Exception:
@@ -52,11 +46,10 @@ def parse_diffs(diff_text):
 
 
 def call_ai_reviewer(file_path, code_chunk):
-    """Send code chunk to OpenAI for review and return concise suggestions."""
     prompt = f"""
-You are a strict senior software engineer reviewing a commit diff. 
-Find problems, code smells, or logic risks. 
-Respond in 3–5 bullet points only, short and concrete.
+You are a senior software engineer reviewing a commit diff.
+Identify code issues, risks, or bad practices.
+Provide 3–5 short and clear bullet points.
 
 File: {file_path}
 Diff:
@@ -93,20 +86,20 @@ def main():
         review_batches.setdefault(path, []).append(f"{lineno}: {text}")
 
     if not review_batches:
-        print("✅ ai-review: no eligible code changes for AI review.")
+        print("[ai-review] No eligible code changes for review.")
         return 0
 
     print("[ai-review] Sending code changes for AI analysis...")
 
     for file_path, lines in review_batches.items():
-        snippet = "\n".join(lines[:30])  # limit size per file
+        snippet = "\n".join(lines[:30])
         feedback = call_ai_reviewer(file_path, snippet)
-        print(f"\n📂 {file_path}")
-        print("────────────────────────────")
+        print(f"\nFile: {file_path}")
+        print("-" * 50)
         print(feedback)
-        print("────────────────────────────")
+        print("-" * 50)
 
-    print("\n✅ AI review complete (suggestions above). Commit proceeds.")
+    print("\n[ai-review] Analysis complete. Commit proceeds.")
     return 0
 
 
