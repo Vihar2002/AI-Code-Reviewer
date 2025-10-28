@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 """
-Step 2 – Diff-aware pre-commit reviewer.
-Scans only staged diffs, reports modified lines containing potential issues.
-(Still no AI yet — just diff parsing logic.)
+Step 3 – AI-Assisted Code Reviewer
+Analyzes only staged diffs and uses OpenAI to generate inline review comments.
 """
 
-import subprocess
+import os
 import sys
+import subprocess
 from pathlib import Path
+from openai import OpenAI
+from dotenv import load_dotenv
+
+# Load .env
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 ALLOWED_EXTS = {".py", ".js", ".ts", ".tsx", ".java", ".go", ".rb", ".cs"}
-
-# Ignore our own tooling folder during development
 IGNORE_PATH_PREFIXES = {Path("tools")}
 IGNORE_FILES = {Path("tools") / "ai_code_reviewer.py"}
 
 
 def run(cmd):
-    """Run shell command and return stdout (UTF-8 safe for Windows)."""
     try:
         return subprocess.check_output(cmd, text=True, encoding="utf-8", errors="ignore")
     except subprocess.CalledProcessError:
@@ -25,15 +29,10 @@ def run(cmd):
 
 
 def get_staged_diffs():
-    """Return staged diff (unified format)."""
     return run(["git", "diff", "--cached", "--unified=0", "--diff-filter=ACM"])
 
 
 def parse_diffs(diff_text):
-    """
-    Parse git diff output → list of (file_path, line_number, line_text)
-    for each added/modified line.
-    """
     results = []
     current_file = None
     for line in diff_text.splitlines():
@@ -52,6 +51,31 @@ def parse_diffs(diff_text):
     return results
 
 
+def call_ai_reviewer(file_path, code_chunk):
+    """Send code chunk to OpenAI for review and return concise suggestions."""
+    prompt = f"""
+You are a strict senior software engineer reviewing a commit diff. 
+Find problems, code smells, or logic risks. 
+Respond in 3–5 bullet points only, short and concrete.
+
+File: {file_path}
+Diff:
+{code_chunk}
+"""
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are an expert code reviewer."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.2,
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return f"[AI ERROR: {e}]"
+
+
 def main():
     diff_text = get_staged_diffs()
     if not diff_text.strip():
@@ -59,30 +83,30 @@ def main():
         return 0
 
     added_lines = parse_diffs(diff_text)
-    issues = []
+    review_batches = {}
 
     for path, lineno, text in added_lines:
-        # skip files in our tools folder and the reviewer itself to avoid self-blocking
         if any(path == p or (p in path.parents) for p in IGNORE_FILES) or (path.parts and path.parts[0] == "tools"):
             continue
-
         if path.suffix not in ALLOWED_EXTS:
             continue
-        if "TODO" in text or "FIXME" in text:
-            issues.append(f"{path}:{lineno}: contains TODO/FIXME")
-        if len(text) > 120:
-            issues.append(f"{path}:{lineno}: line exceeds 120 chars")
-        if "print(" in text and path.suffix == ".py":
-            issues.append(f"{path}:{lineno}: avoid print statements in production code")
+        review_batches.setdefault(path, []).append(f"{lineno}: {text}")
 
-    if issues:
-        print("❌ Commit blocked by ai-review (diff scan):")
-        for msg in issues:
-            print("  -", msg)
-        print("\nFix or bypass with `git commit --no-verify` (not recommended).")
-        return 1
+    if not review_batches:
+        print("✅ ai-review: no eligible code changes for AI review.")
+        return 0
 
-    print("✅ ai-review: no issues found in staged changes.")
+    print("[ai-review] Sending code changes for AI analysis...")
+
+    for file_path, lines in review_batches.items():
+        snippet = "\n".join(lines[:30])  # limit size per file
+        feedback = call_ai_reviewer(file_path, snippet)
+        print(f"\n📂 {file_path}")
+        print("────────────────────────────")
+        print(feedback)
+        print("────────────────────────────")
+
+    print("\n✅ AI review complete (suggestions above). Commit proceeds.")
     return 0
 
 
