@@ -23,13 +23,12 @@ Copy code
 
 ---
 
-## Setup
-
-### 1. Clone the Repository
+## 1. Clone the Repository
 ```bash
 git clone https://github.com/Vihar2002/AI-Code-Reviewer.git
 cd AI-Code-Reviewer
-### 2. Create a Virtual Environment
+
+## 2. Create a Virtual Environment
 ```bash
 Copy code
 python -m venv .venv
