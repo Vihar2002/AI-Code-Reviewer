@@ -29,27 +29,29 @@ Copy code
 ```bash
 git clone https://github.com/Vihar2002/AI-Code-Reviewer.git
 cd AI-Code-Reviewer
-2. Create a Virtual Environment
-bash
+### 2. Create a Virtual Environment
+```bash
 Copy code
 python -m venv .venv
+
 Activate it:
+#### Windows
 
-Windows
-
-bash
+```bash
 Copy code
 .\.venv\Scripts\activate
-Linux / macOS
 
-bash
+####Linux / macOS
+```bash
 Copy code
 source .venv/bin/activate
-3. Install Dependencies
-bash
+
+### 3. Install Dependencies
+```bash
 Copy code
 pip install openai python-dotenv
-4. Add Your OpenAI API Key
+
+### 4. Add Your OpenAI API Key
 Create a .env file in the project root:
 
 ini
