@@ -41,3 +41,9 @@ cp .git_hooks/pre-commit .git/hooks/pre-commit
 
 # Make it executable (Unix)
 chmod +x .git/hooks/pre-commit
+
+
+## Configuration
+- Add your OpenAI API key to a .env file:
+```bash
+OPENAI_API_KEY=your_key_here
